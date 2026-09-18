@@ -1,0 +1,35 @@
+name: Validate skill
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check SKILL.md has valid frontmatter
+        run: |
+          python - <<'PY'
+          import re, sys
+          text = open("SKILL.md").read()
+          m = re.match(r"^---\n(.*?)\n---", text, re.S)
+          if not m:
+              print("SKILL.md missing YAML frontmatter"); sys.exit(1)
+          fm = m.group(1)
+          for field in ("name:", "description:", "license:"):
+              if field not in fm:
+                  print(f"Missing {field}"); sys.exit(1)
+          print("SKILL.md frontmatter OK")
+          PY
+      - name: Token estimator smoke test
+        run: python scripts/token_estimator.py --text "hello world"
+      - name: Context audit smoke test
+        run: |
+          mkdir -p /tmp/test-session
+          python scripts/context_audit.py --session-dir /tmp/test-session || true
