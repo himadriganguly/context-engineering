@@ -17,7 +17,7 @@ jobs:
         run: |
           python - <<'PY'
           import re, sys
-          text = open("SKILL.md").read()
+          text = open("skills/context-engineering/SKILL.md").read()
           m = re.match(r"^---\n(.*?)\n---", text, re.S)
           if not m:
               print("SKILL.md missing YAML frontmatter"); sys.exit(1)
