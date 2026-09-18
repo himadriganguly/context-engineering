@@ -20,17 +20,43 @@ import argparse
 import json
 import os
 import re
+import sys
+import logging
 from collections import Counter
 from datetime import datetime, timezone
+
+try:
+    import tiktoken
+    HAS_TIKTOKEN = True
+except ImportError:
+    HAS_TIKTOKEN = False
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_CHARS_PER_TOKEN = 3.8
 DEFAULT_WINDOW_SIZE = 128_000
 DEFAULT_OUTPUT_DIR = "~/.context-engineering/audits"
 
-def estimate_tokens(text: str, chars_per_token: float) -> int:
-    """Return a character-based estimate of token count."""
+def estimate_tokens(
+    text: str, 
+    chars_per_token: float,
+    encoding_name: str = "cl100k_base"
+) -> int:
+    """
+    Return exact token count if tiktoken is available, 
+    otherwise fall back to a character-based estimate.
+    """
     if not text:
         return 0
+        
+    if HAS_TIKTOKEN:
+        try:
+            encoding = tiktoken.get_encoding(encoding_name)
+            return len(encoding.encode(text, allowed_special="all"))
+        except Exception:
+            # Failsafe: if tiktoken crashes on an unexpected string, drop to heuristic
+            pass
+
     return max(1, int(len(text) / chars_per_token))
 
 def read_text(path: str) -> str:
@@ -41,10 +67,6 @@ def read_text(path: str) -> str:
 def load_session(session_dir: str) -> dict:
     """
     Load artifacts from the supported generic session layout.
-
-    The loader intentionally does not claim to understand any runtime's
-    private session format. Runtimes may need an adapter that exports
-    their session into this layout.
     """
     artifacts = {
         "system_prompt": "",
@@ -81,7 +103,9 @@ def load_session(session_dir: str) -> dict:
                 if not line:
                     continue
                 try:
-                    artifacts["conversation"].append(json.loads(line))
+                    parsed = json.loads(line)
+                    if isinstance(parsed, dict):
+                        artifacts["conversation"].append(parsed)
                 except json.JSONDecodeError:
                     continue
 
@@ -199,8 +223,8 @@ def audit(
         for sentence in re.split(r"[.!?]\s+", content):
             sentence = sentence.strip()
 
-            if re.match(
-                r"^(must|should|never|always|do not|don't|ensure|"
+            if re.search(
+                r"\b(must|should|never|always|do not|don't|ensure|"
                 r"make sure|require|need|only|avoid)\b",
                 sentence,
                 re.IGNORECASE,
@@ -287,22 +311,22 @@ def audit(
         ]
     )
 
-    ngram_counts = Counter()
+    ngram_hash_counts = Counter()
 
     for block in all_blocks:
-        words = re.findall(
-            r"\b\w+\b",
-            block.lower(),
-        )
+        words = [
+            match.group(0) 
+            for match in re.finditer(r"\b\w+\b", block.lower())
+        ]
 
         for index in range(max(0, len(words) - 5)):
-            ngram = tuple(words[index:index + 6])
-            ngram_counts[ngram] += 1
+            ngram_hash = hash(tuple(words[index:index + 6]))
+            ngram_hash_counts[ngram_hash] += 1
 
-    total_ngrams = sum(ngram_counts.values())
+    total_ngrams = sum(ngram_hash_counts.values())
     duplicated = sum(
         count - 1
-        for count in ngram_counts.values()
+        for count in ngram_hash_counts.values()
         if count > 1
     )
 
@@ -449,21 +473,27 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     """Run the command-line audit."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        stream=sys.stderr
+    )
+
     parser = build_parser()
     args = parser.parse_args()
 
     if args.window_size <= 0:
-        parser.error("--window-size must be greater than zero.")
+        logger.error("--window-size must be greater than zero.")
+        sys.exit(1)
 
     if args.chars_per_token <= 0:
-        parser.error(
-            "--chars-per-token must be greater than zero."
-        )
+        logger.error("--chars-per-token must be greater than zero.")
+        sys.exit(1)
 
     if not os.path.isdir(args.session_dir):
-        parser.error(
-            f"Session directory does not exist: {args.session_dir}"
-        )
+        logger.error(f"Session directory does not exist: {args.session_dir}")
+        sys.exit(1)
 
     artifacts = load_session(args.session_dir)
 
@@ -508,45 +538,21 @@ def main() -> None:
             )
         )
     else:
-        print(
-            f"\n=== Context Audit: {args.session_dir} ===\n"
-        )
-        print(
-            f"  Estimated tokens:       "
-            f"{report['estimated_tokens']:,}"
-        )
-        print(
-            f"  Window size:            "
-            f"{report['window_size']:,}"
-        )
-        print(
-            f"  Window utilization:     "
-            f"{report['utilization']:.1%}"
-        )
-        print(
-            f"  Instruction survival:   "
-            f"{report['instruction_survival_rate']:.1%}"
-        )
-        print(
-            f"  Stale content ratio:    "
-            f"{report['stale_content_ratio']:.1%}"
-        )
-        print(
-            f"  Repetition ratio:       "
-            f"{report['repetition_ratio']:.1%}"
-        )
+        logger.info(f"Context Audit for session: {args.session_dir}")
+        logger.info(f"Estimated tokens: {report['estimated_tokens']:,}")
+        logger.info(f"Window size: {report['window_size']:,}")
+        logger.info(f"Window utilization: {report['utilization']:.1%}")
+        logger.info(f"Instruction survival: {report['instruction_survival_rate']:.1%}")
+        logger.info(f"Stale content ratio: {report['stale_content_ratio']:.1%}")
+        logger.info(f"Repetition ratio: {report['repetition_ratio']:.1%}")
 
-        print("\n  Top contributors:")
-
+        logger.info("Top contributors:")
         for contributor in report["top_contributors"][:10]:
-            print(
-                f"    {contributor['source']}: "
-                f"{contributor['tokens']:,} estimated tokens"
+            logger.info(
+                f"  {contributor['source']}: {contributor['tokens']:,} estimated tokens"
             )
 
-        print(
-            f"\n  Report saved: {report_path}"
-        )
+        logger.info(f"Report saved: {report_path}")
 
     if args.compare:
         reports = sorted(
@@ -557,16 +563,12 @@ def main() -> None:
         )
 
         if len(reports) >= 2:
-            print(
-                compare_reports(
-                    reports[-2],
-                    reports[-1],
-                )
-            )
+            comparison = compare_reports(reports[-2], reports[-1])
+            for line in comparison.split("\n"):
+                if line.strip():
+                    logger.info(line)
         else:
-            print(
-                "\n  No previous audit to compare against."
-            )
+            logger.warning("No previous audit to compare against.")
 
 if __name__ == "__main__":
     main()
