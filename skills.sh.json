@@ -1,0 +1,11 @@
+{
+    "$schemas": "https://skills.sh/schemas/skills.sh.schema.json",
+    "groupings": [
+        {
+            "title": "Agent Infrastructure",
+            "skills": [
+                "context-engineering"
+            ]
+        }
+    ]
+}

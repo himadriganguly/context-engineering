@@ -5,6 +5,30 @@
 [![Version](https://img.shields.io/badge/version-1.0.0-green)](CHANGELOG.md)
 [![Validate skill](https://github.com/himadriganguly/context-engineering/workflows/Validate%20skill/badge.svg)](https://github.com/himadriganguly/context-engineering/actions/workflows/validate.yml)
 
+A portable Agent Skill for diagnosing and improving context usage in
+long-running AI-agent sessions.
+
+The project combines a concise `SKILL.md` procedure with optional
+reference material and standalone Python utilities for inspecting
+session artifacts and estimating the relative size of files.
+
+> [!WARNING]
+> **Use at your own risk.**
+>
+> This project provides heuristics and workflow guidance. Its metrics
+> are estimates and are not authoritative measurements of model
+> attention, reasoning quality, or context-window behavior.
+>
+> Review the scripts before running them on sensitive data. The audit
+> utility reads files from the session directory you provide and writes
+> reports to a local output directory. Do not point it at directories
+> containing sensitive information unless you understand what will be
+> read and where the resulting report will be written.
+>
+> Back up important project or session data before applying automated
+> or agent-assisted changes. Validate recommendations against your own
+> model, runtime, and workload.
+
 **The missing meta-skill for AI agents.** Teaches any Agent
 Skills–compatible agent how to diagnose, optimize, and maintain its own
 context window — the working memory that determines whether every other
@@ -12,433 +36,526 @@ skill works or fails.
 
 ---
 
-## The Problem
+## What this skill does
 
-AI agents have a fixed-size working memory called a **context window**.
-As a session grows — more turns, more file reads, more tool output,
-more loaded skills — that memory fills up.
+Context is the working information available to an AI agent while it
+performs a task.
 
-When it does, the agent does not crash. It quietly gets worse:
+As context grows, several problems can become more difficult to
+diagnose:
 
-- It forgets your instructions.
-- It mixes up details from three tasks ago.
-- It ignores rules buried in the middle of the conversation.
-- It repeats itself.
-- It invents facts when it cannot find the real ones.
+- stale information remains active
+- large tool outputs crowd out more relevant material
+- instructions can become harder to retrieve
+- duplicate information consumes space
+- conflicting instructions can remain active simultaneously
+- long conversations can become difficult to summarize accurately
 
-Industry reports in 2026 consistently name **context engineering** as
-the number-one unmet skill for people building AI agents. Every team
-hits the same wall. Almost nobody has a systematic way to fix it.
+This skill provides a repeatable workflow:
 
-This project fills that gap. It is a complete, open-source,
-MIT-licensed toolkit — not a blog post, not a set of tips, but a
-working skill that any agent can load and apply.
+1. **Measure** available context where compatible session artifacts
+   exist.
+2. **Identify** a likely degradation pattern.
+3. **Apply** a structural context-management change.
+4. **Encode** durable project rules in appropriate project
+   documentation.
+5. **Re-measure** and evaluate the actual task result.
 
-## What You Get
+The goal is not to claim that one fixed threshold works for every
+model. The goal is to provide a practical way to investigate context
+problems.
+
+---
+
+## What you get
 
 | Component | Purpose |
 |---|---|
-| `SKILL.md` | The core procedure — a five-step workflow the agent follows |
-| `scripts/context_audit.py` | Measures token usage, instruction survival, staleness, repetition |
-| `scripts/token_estimator.py` | Predicts token cost of any text, file, or directory |
-| `references/degradation-signals.md` | Full taxonomy of the five context failure modes |
-| `references/progressive-disclosure-patterns.md` | Six reusable patterns for keeping context small |
-| `references/token-budget-framework.md` | Budget allocation and enforcement rules |
-| `templates/context-profile.yaml` | Declarative context architecture for any project |
-| `EXAMPLES.md` | Five real-world case studies with measurable outcomes |
-| `INSTALL.md` | Step-by-step installation for seven runtimes |
+| `skills/context-engineering/SKILL.md` | Core five-step workflow |
+| `skills/context-engineering/scripts/context_audit.py` | Lightweight audit of supported session artifacts |
+| `skills/context-engineering/scripts/token_estimator.py` | Relative size/token estimate for text, files, and directories |
+| `skills/context-engineering/references/degradation-signals.md` | Context degradation taxonomy |
+| `skills/context-engineering/references/progressive-disclosure-patterns.md` | Context organization patterns |
+| `skills/context-engineering/references/token-budget-framework.md` | Budgeting guidance and example thresholds |
+| `skills/context-engineering/templates/context-profile.yaml` | Example project context profile |
+| `EXAMPLES.md` | Illustrative scenarios |
+| `INSTALL.md` | Installation and runtime compatibility notes |
 
-Everything is plain Markdown and standalone Python. No external
-dependencies. No lock-in. No telemetry. No paywall.
+The Python utilities use only the Python standard library.
 
----
+No `pip install` step is required.
 
-## The Five-Step Procedure
-
-The skill teaches the agent to:
-
-1. **Audit** — run a script that measures six metrics about the current
-   session: total tokens, window utilization, instruction survival
-   rate, stale content ratio, repetition ratio, and top contributors.
-
-2. **Classify** — match the numbers to one of five known failure modes:
-   poisoning, clash, confusion, lost-in-middle, or overload.
-
-3. **Fix** — apply the structural fix for that failure mode. The fix
-   is almost never "reword the prompt." It is "move content to the
-   right tier, compress history to a brief, or cache large tool
-   output to disk."
-
-4. **Rebuild** — write the fix into `context-profile.yaml` so it
-   persists across sessions. The fix becomes part of the project's
-   architecture, not a one-time bandage.
-
-5. **Verify** — re-run the audit and confirm the numbers improved
-   without task quality regressing.
-
-This is the same procedure whether you are debugging a three-hour
-coding session, a 30-turn customer support conversation, or a
-five-day product spec.
+The project does not require telemetry or a hosted service.
 
 ---
 
-## Quick Install
+## Agent Skills compatibility
 
-### Hermes Agent
+The core skill follows the open Agent Skills format:
 
-```bash
-mkdir -p ~/.hermes/skills
-cp -r context-engineering ~/.hermes/skills/
+```
+skills/context-engineering/
+├── SKILL.md
+├── references/
+├── scripts/
+└── templates/
 ```
 
-Restart the agent. The skill is now available.
+The portable portion is the Markdown skill and its referenced
+resources.
 
-### Claude Code
+The optional Python audit utility is different: it expects a particular
+session-artifact layout. A runtime that stores its sessions differently
+may require an adapter or an exported session directory.
 
-```bash
-mkdir -p ~/.claude/skills
-cp -r context-engineering ~/.claude/skills/
-```
+Therefore:
 
-### Cursor
+> **Agent Skills format compatibility does not mean native
+> session-script compatibility with every runtime.**
 
-```bash
-mkdir -p ~/.cursor/skills
-cp -r context-engineering ~/.cursor/skills/
-```
-
-### Everything else
-
-Any runtime that follows the [Agent Skills specification](https://agentskills.io)
-uses the same idea: copy the `context-engineering/` directory into
-the runtime's skills path. Full instructions for seven runtimes —
-including Codex, Gemini CLI, OpenClaw, and generic fallbacks — are in
-[INSTALL.md](INSTALL.md).
-
----
-
-## Try It
-
-Once installed, trigger the skill by asking your agent something like:
-
-> "My session feels bloated and you're ignoring my earlier
-> instructions. Use the context-engineering skill to diagnose and fix
-> it."
-
-The agent will:
-
-1. Run the audit script against the current session.
-2. Read the numbers.
-3. Classify the failure mode.
-4. Apply the structural fix.
-5. Verify the fix worked.
-
-You can also invoke the scripts directly, without involving the agent:
-
-```bash
-# Audit the current session
-python3 scripts/context_audit.py --session-dir ~/.hermes/sessions/current
-
-# Estimate the token cost of a file before loading it
-python3 scripts/token_estimator.py --file references/architecture.md
-
-# Find the largest files in a project
-python3 scripts/token_estimator.py --dir . --recursive --top 20
-```
-
-The scripts are useful on their own, even if you never load the skill
-into an agent.
-
----
-
-## Why This Exists
-
-The idea for this skill came from a specific observation:
-
-**Every agent developer hits the same wall at roughly the same point.**
-
-The wall looks like this: the agent works fine for 20 turns, then
-starts to drift. By turn 50, it is missing constraints it followed
-perfectly at turn 5. By turn 100, it is inventing facts.
-
-The wall is not a bug in any particular runtime. It is a fundamental
-property of how attention works in transformer models. The context
-window is not a database. It is a working memory with known
-limitations: attention degrades with position, information gets
-crowded out, and quality drops non-linearly as the window fills.
-
-The fix is not a better model. It is **context engineering** — a
-discipline of deliberately curating what goes into the window, when,
-and in what form.
-
-This skill packages that discipline into something an agent can apply
-to itself.
-
----
-
-## What Makes This Different
-
-Several projects address pieces of the problem. Most fall into one of
-three categories:
-
-- **Blog posts and papers** — describe the problem well but do not
-  provide a tool an agent can use.
-- **Framework-specific features** — locked to one runtime, not
-  portable.
-- **Partial solutions** — cover one technique (summarization,
-  retrieval, compression) but not the whole lifecycle.
-
-This project is different in four ways:
-
-### 1. It is a complete lifecycle
-
-Not just compression, not just measurement, not just a taxonomy.
-Diagnosis, classification, fix, prevention, and verification — the
-whole cycle, in a single skill.
-
-### 2. It is runtime-agnostic
-
-Pure Markdown plus standalone Python. No frameworks, no dependencies,
-no lock-in. Works on Hermes, Claude Code, Cursor, Codex, Gemini CLI,
-OpenClaw, and anything else that implements the Agent Skills
-specification.
-
-### 3. It is measurable
-
-The skill does not say "the agent will be more reliable." It says "the
-audit will show instruction survival above 0.9 and utilization below
-0.5." Every claim is backed by a metric the user can verify.
-
-### 4. It is recursive
-
-The skill uses the techniques it teaches. `SKILL.md` is a compact
-quick reference; the deep knowledge lives in `references/` and is
-loaded on demand. The structure of the skill is itself a demonstration
-of progressive disclosure.
-
----
-
-## Who This Is For
-
-- **Agent developers** who want their agents to stay sharp across
-  long sessions.
-- **Prompt engineers** moving from "write better prompts" to
-  "architect context."
-- **Teams** running agents in production where token cost and quality
-  both matter.
-- **Researchers** who need their agents to cite sources correctly.
-- **Anyone** building on the Agent Skills standard who wants a
-  foundation skill.
-
-You do not need to be an expert in transformers or attention
-mechanisms. The skill is written in plain language. The scripts run
-with a single command. The concepts — window, tier, budget, brief —
-are intuitive.
+This distinction is intentional.
 
 ---
 
 ## Compatibility
 
-| Runtime | Status | Skills path |
-|---|---|---|
-| Hermes Agent (Nous Research) | ✅ Tested | `~/.hermes/skills/` |
-| Claude Code | ✅ Tested | `~/.claude/skills/` |
-| Cursor | ✅ Tested | `~/.cursor/skills/` |
-| OpenAI Codex | ✅ Expected | `~/.codex/skills/` |
-| Gemini CLI | ✅ Expected | `~/.gemini/skills/` |
-| OpenClaw | ✅ Expected | `~/.agent-skills/` |
-| Custom runtime | ✅ Expected | Any path the runtime scans |
+| Runtime | Core skill format | Audit scripts | Status in this repository |
+|---|---|---|---|
+| Hermes Agent | Compatible | Designed for compatible exported/session artifacts | Primary target |
+| Claude Code | Agent Skills format compatible | Runtime session integration not provided | Format-compatible; script integration not independently validated |
+| Cursor | Agent Skills format compatible | Runtime session integration not provided | Format-compatible; script integration not independently validated |
+| OpenAI Codex | Agent Skills format compatible | Runtime session integration not provided | Format-compatible; script integration not independently validated |
+| Gemini CLI | Agent Skills format compatible | Runtime session integration not provided | Format-compatible; script integration not independently validated |
+| OpenClaw | Not independently validated by this repository | Not independently validated | Do not assume compatibility |
+| Other runtimes | Potentially compatible | Runtime-dependent | Validate before use |
 
-Requirements:
+The skill itself requires only an Agent Skills-compatible runtime.
 
-- **Python 3.9 or later** for the scripts. No `pip install` step.
-- **Any Agent Skills–compatible runtime** for the skill itself.
+The optional Python utilities require Python 3.9+.
 
-The skill has been tested against Hermes, Claude Code, and Cursor.
-The other runtimes are expected to work but have not been formally
-validated. If you test on a runtime that is not listed, please open
-an issue with the result.
+Runtime-specific skills paths and installation procedures are
+documented in [INSTALL.md](INSTALL.md).
 
 ---
 
-## Principles
+## Hermes Skills Hub
 
-Four beliefs that shape every decision in this project.
+This repository is structured as a GitHub skill tap:
 
-### 1. Measure before fixing
+```
+context-engineering/
+├── skills/
+│   └── context-engineering/
+│       ├── SKILL.md
+│       ├── references/
+│       ├── scripts/
+│       └── templates/
+├── skills.sh.json
+└── README.md
+```
 
-An audit without numbers is an opinion. The scripts produce numbers.
-Every claim about improvement is backed by a before/after comparison.
+Hermes supports GitHub skill taps using this layout and supports
+`skills.sh.json` for category groupings.
 
-### 2. Structure beats tricks
+Publish the skill with:
 
-No single prompt hack fixes context problems. The fix is architectural
-— moving content to the right tier, compressing it into a brief,
-caching it to disk. Structure scales. Tricks do not.
+```bash
+hermes skills publish \
+  skills/context-engineering \
+  --to github \
+  --repo himadriganguly/context-engineering
+```
 
-### 3. Headroom is sacred
+For a custom GitHub tap:
 
-A context that is 100% full performs worse than one that is 70% full.
-The last 20% of the window is not waste — it is the space the model
-uses to reason. Never allocate it.
+```bash
+hermes skills tap add himadriganguly/context-engineering
+```
 
-### 4. Skills are context too
+Then search the GitHub source:
 
-Every loaded skill costs tokens. A session with 12 skills loaded has
-less room for the actual task. Load only what the task needs. Unload
-what it does not.
+```bash
+hermes skills search context-engineering --source github
+```
+
+The public Hermes Skills Hub uses a generated catalog snapshot rather
+than crawling GitHub live. A newly published skill may therefore take
+time to appear in the public catalog.
+
+---
+
+## Quick install
+
+### Hermes
+
+For a direct local installation, the installed skill directory should
+contain `SKILL.md` at its top level:
+
+```bash
+mkdir -p ~/.hermes/skills
+cp -r skills/context-engineering ~/.hermes/skills/
+```
+
+Verify:
+
+```bash
+ls ~/.hermes/skills/context-engineering/SKILL.md
+```
+
+Hermes also supports GitHub skill taps and Hub installation. See
+[INSTALL.md](INSTALL.md).
+
+### Other Agent Skills runtimes
+
+Do not blindly copy the repository root into another runtime's skill
+directory.
+
+Copy the skill directory:
+
+```
+skills/context-engineering/
+```
+
+to the location documented by that runtime.
+
+See [INSTALL.md](INSTALL.md) for runtime-specific notes.
+
+---
+
+## Using the skill
+
+Ask the agent to use the skill when a context problem is suspected.
+
+For example:
+
+> Use the context-engineering skill to investigate why important
+> constraints are being missed during this long session.
+
+The agent should:
+
+1. Determine whether compatible session artifacts are available.
+2. Run the audit when appropriate.
+3. Read the relevant reference material.
+4. Form a hypothesis about the likely context problem.
+5. Apply a structural intervention.
+6. Verify the result.
+
+If the runtime does not expose compatible session artifacts, the agent
+can still use the conceptual workflow and the static token estimator.
+
+---
+
+## Using the audit utility
+
+The audit utility accepts a directory containing the supported
+artifact layout.
+
+Basic usage:
+
+```bash
+python3 skills/context-engineering/scripts/context_audit.py \
+  --session-dir PATH
+```
+
+Specify a model/runtime context-window size:
+
+```bash
+python3 skills/context-engineering/scripts/context_audit.py \
+  --session-dir PATH \
+  --window-size 200000
+```
+
+JSON output:
+
+```bash
+python3 skills/context-engineering/scripts/context_audit.py \
+  --session-dir PATH \
+  --json
+```
+
+Compare the two latest reports:
+
+```bash
+python3 skills/context-engineering/scripts/context_audit.py \
+  --session-dir PATH \
+  --compare
+```
+
+Specify where reports are written:
+
+```bash
+python3 skills/context-engineering/scripts/context_audit.py \
+  --session-dir PATH \
+  --output-dir ./audit-results
+```
+
+The audit uses heuristics. It does not inspect the model's internal
+attention or determine causality.
+
+---
+
+## Using the token estimator
+
+Estimate a string:
+
+```bash
+python3 skills/context-engineering/scripts/token_estimator.py \
+  --text "example text"
+```
+
+Estimate a file:
+
+```bash
+python3 skills/context-engineering/scripts/token_estimator.py \
+  --file path/to/file
+```
+
+Find large files:
+
+```bash
+python3 skills/context-engineering/scripts/token_estimator.py \
+  --dir . \
+  --recursive \
+  --top 20
+```
+
+The estimator uses a character-based approximation.
+
+It is intended for relative comparisons and rough planning.
+
+It is not an exact tokenizer and should not be used for billing,
+quota, or model-capacity calculations.
+
+---
+
+## Interpreting the metrics
+
+The audit reports several lightweight indicators.
+
+### Estimated tokens
+
+An approximation based on characters divided by a configurable
+characters-per-token value.
+
+### Window utilization
+
+Estimated context size divided by the configured context-window size.
+
+### Instruction survival
+
+The fraction of detectable user constraints that remain findable in
+the inspected artifacts.
+
+This is not semantic instruction-following evaluation.
+
+### Stale content
+
+A heuristic based on vocabulary overlap between older and recent
+conversation material.
+
+### Repetition
+
+A heuristic based on repeated word n-grams.
+
+### Top contributors
+
+The largest inspected blocks by estimated token count.
+
+These metrics are useful for identifying trends and candidates for
+investigation. They should not be interpreted as proof of model
+behavior.
+
+---
+
+## Context headroom
+
+The project uses 80% utilization as a conservative investigation
+threshold.
+
+That does not mean that every model begins degrading at exactly 80%.
+
+Actual behavior depends on:
+
+- model architecture
+- tokenizer
+- context-window implementation
+- system instructions
+- tool schemas
+- runtime overhead
+- task complexity
+- information placement
+- workload
+
+Treat 80% as a starting point, not a universal law.
+
+---
+
+## Token estimation limitations
+
+The included estimator uses a simple character-based heuristic.
+
+For example:
+
+```
+characters / 3.8 ≈ estimated tokens
+```
+
+The value is configurable because different languages, file formats,
+tokenizers, and models can produce substantially different ratios.
+
+If exact token counts matter, use the tokenizer appropriate for the
+model you are actually using.
 
 ---
 
 ## Examples
 
-Five real-world case studies in [EXAMPLES.md](EXAMPLES.md). A quick
-preview:
+[EXAMPLES.md](EXAMPLES.md) contains illustrative scenarios showing how
+the workflow can be applied.
 
-| Example | Primary failure | Key fix | Before → After |
-|---|---|---|---|
-| Long coding session | Overload + lost-in-middle | Resume brief | 112k → 38k tokens |
-| Customer support drift | Lost-in-middle | Policy re-injection | 12 → 0 violations |
-| Research assistant | Confusion | Paper index | 4 → 0 hallucinations |
-| DevOps incident | Overload | Emergency compression | 45 min → 12 min |
-| Multi-day project | Confusion across sessions | Session bookends | 15 min → 30 sec |
+The examples are not presented as controlled benchmarks or guarantees.
 
-Each case study includes the symptom, the actual audit output, the
-fix applied, and before/after metrics.
+Results from context restructuring vary by model, runtime, task, and
+workload.
+
+When reporting your own results, record:
+
+- model/provider
+- runtime and version
+- context-window size
+- input/task
+- before metrics
+- intervention
+- after metrics
+- task-quality evaluation method
+
+This makes results easier to reproduce and compare.
+
+---
+
+## Design principles
+
+### Measure before changing
+
+Use measurements and observations to establish a baseline where
+possible.
+
+### Structure beats prompt tricks
+
+Context problems are often better addressed by deciding what should be
+always-on, what should be on-demand, and what should be externalized.
+
+### Preserve headroom
+
+Avoid designing workflows that depend on filling the entire context
+window.
+
+### Treat skills as context
+
+Skills and their references consume context too. Load only what the
+task requires.
+
+### Verify the task, not only the metric
+
+A lower estimated token count is not automatically an improvement if
+important information was removed.
 
 ---
 
 ## Project Structure
 
 ```
-context-engineering-skill/
+context-engineering/
+│
 ├── .github/
 │   └── workflows/
-│       └── validate.yml                    # CI: validates frontmatter + runs scripts
+│       └── validate.yml                            # CI: validates frontmatter + runs scripts
 ├── examples/
-│   └── README.md                           # Index for the case studies
-├── references/
-│   ├── degradation-signals.md              # Taxonomy of the 5 failure modes
-│   ├── progressive-disclosure-patterns.md  # 6 patterns for keeping context small
-│   └── token-budget-framework.md           # Budget allocation + enforcement
-├── scripts/
-│   ├── context_audit.py                    # Produces the quantitative audit
-│   └── token_estimator.py                  # Pre-flight cost estimator
-├── templates/
-│   └── context-profile.yaml                # Declarative context architecture
+│   └── README.md                                   # Index for the case studies
+├── skills/
+│   └── context-engineering/                        # ★ The installable skill
+│       ├── references/
+│       │   ├── degradation-signals.md              # Taxonomy of the 5 failure modes
+│       │   ├── progressive-disclosure-patterns.md  # 6 patterns for keeping context small
+│       │   └── token-budget-framework.md           # Budget allocation + enforcement
+│       ├── scripts/
+│       │   ├── context_audit.py                    # Produces the quantitative audit
+│       │   └── token_estimator.py                  # Pre-flight cost estimator
+│       ├── templates/
+│       │   └── context-profile.yaml                # Declarative context architecture
+│       └── SKILL.md                                # The core procedure
+│
 ├── .gitignore
-├── CHANGELOG.md                            # Version history
-├── CONTRIBUTING.md                         # Contribution guide
-├── EXAMPLES.md                             # 5 real-world case studies
-├── INSTALL.md                              # Install for 7 runtimes
-├── LICENSE                                 # MIT
-├── README.md                               # This file
-├── SKILL.md                                # The core procedure
-└── UPLOAD.md                               # How to publish to GitHub
+├── CHANGELOG.md                                    # Version history
+├── CONTRIBUTING.md                                 # Contribution guide
+├── EXAMPLES.md                                     # 5 real-world case studies
+├── INSTALL.md                                      # Install for 7 runtimes
+├── LICENSE                                         # MIT
+├── README.md                                       # This file
+└── skills.sh.json                                  # Manifest for `npx skills add`
 ```
-
-The agent only ever loads `SKILL.md` up front. Everything else in
-`references/` loads on demand. The scripts execute rather than load.
-This is progressive disclosure applied to the skill's own structure.
-
----
-
-## Roadmap
-
-Features under consideration for future releases. Not commitments —
-directions the project could grow in.
-
-- A web-based viewer that renders `audit-*.json` reports as charts
-  over time.
-- A `--watch` mode for `context_audit.py` that re-runs automatically
-  when the session directory changes.
-- Reference file templates for common domains (API, database, ML,
-  frontend).
-- Translations of `SKILL.md` into Spanish, French, German, Japanese,
-  and Mandarin.
-- A `context-profile.schema.json` for editor autocomplete and
-  validation.
-- Direct API integrations with Hermes, Claude Code, and Cursor to read
-  session state without requiring a session directory.
-
-If any of these interest you, open an issue to discuss the approach
-before writing code.
 
 ---
 
 ## Contributing
 
-Contributions are welcome. The most valuable ones are:
+Useful contributions include:
 
-- **New degradation patterns** — a failure mode not covered by the
-  existing five.
-- **Real-world case studies** — concrete numbers beat abstract advice.
-- **New runtime support** — install instructions for a runtime not yet
-  listed.
-- **Translations** — the skill is used worldwide.
+- new context degradation patterns
+- additional runtime adapters
+- additional supported session formats
+- better test fixtures
+- reproducible case studies
+- documentation improvements
+- translations
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for what we want, what we do not
-want, and how to submit.
+When adding runtime support, distinguish clearly between:
 
-A few non-obvious constraints:
+1. Agent Skills format compatibility.
+2. Installation/discovery compatibility.
+3. Python-script compatibility.
+4. Native session integration.
 
-- No external Python dependencies. The scripts must run on a bare
-  Python 3.9+ install.
-- No runtime-specific hacks in `SKILL.md`. Runtime-specific behavior
-  goes in `metadata` or in a reference file.
-- Any change that increases the always-on cost of the skill must
-  justify the increase. That cost is multiplied by every session of
-  every user.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## Security and privacy
+
+The core skill is Markdown.
+
+The Python audit utility reads files from the directory supplied
+through `--session-dir`.
+
+Do not assume that a session directory is safe to expose.
+
+Before running the audit:
+
+- inspect the input directory
+- understand what files will be read
+- avoid sensitive directories unless necessary
+- choose an appropriate `--output-dir`
+- review generated JSON reports before sharing them
+
+The project does not require network access for the included Python
+utilities.
 
 ---
 
 ## License
 
-MIT. Use it, fork it, ship it, sell it, embed it in your product.
-Attribution is appreciated but not required.
+MIT.
 
-See [LICENSE](LICENSE) for the full text.
-
----
-
-## Acknowledgments
-
-This skill was created in response to a widely observed gap in the
-2026 agent ecosystem. It draws on:
-
-- The [Agent Skills specification](https://agentskills.io) for the
-  file format and loading semantics.
-- The Hermes Agent skills documentation for runtime conventions.
-- Public discussions of context window degradation across the
-  agent-development community.
-- The [Keep a Changelog](https://keepachangelog.com/) and
-  [Semantic Versioning](https://semver.org/) projects, whose formats
-  this repository follows.
-
-Thanks to everyone who has contributed failure modes, case studies,
-and corrections. The project is better because of you.
+See [LICENSE](LICENSE).
 
 ---
 
-## Related Reading
+## Status
 
-If you want to understand the underlying problem more deeply:
+Version 1.0.0.
 
-- **"Lost in the Middle: How Language Models Use Long Contexts"** —
-  the paper that named the attention-degradation pattern this skill
-  addresses.
-- **The Agent Skills specification** —
-  https://agentskills.io — the standard this skill conforms to.
-- **The Hermes Agent documentation** —
-  https://hermes-agent.nousresearch.com/docs — for runtime-specific
-  details on skill loading.
+The Agent Skills format and Hermes integration are the primary
+distribution targets.
 
-The skill is not a substitute for understanding the underlying
-mechanisms. It is a working tool that encodes the current best
-practices for dealing with them. When the understanding improves, the
-tool should too.
-
----
-
-**Status:** v1.0.0 — stable, tested on three runtimes, used in
-production by the maintainers. Issues and pull requests welcome.
+Runtime-specific script integrations should be considered experimental
+until independently validated and documented.

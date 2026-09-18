@@ -15,10 +15,9 @@ compress.
 
 ## Measuring
 
-Before you can budget, you must measure. Use the token estimator to
-find the cost of any text, file, or directory.
+Before budgeting context, measure what you can observe.
 
-### Single string
+Use:
 
 ```bash
 python scripts/token_estimator.py --text "your string here"
