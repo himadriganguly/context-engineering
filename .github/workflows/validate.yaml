@@ -28,8 +28,8 @@ jobs:
           print("SKILL.md frontmatter OK")
           PY
       - name: Token estimator smoke test
-        run: python scripts/token_estimator.py --text "hello world"
+        run: python skills/context-engineering/scripts/token_estimator.py --text "hello world"
       - name: Context audit smoke test
         run: |
           mkdir -p /tmp/test-session
-          python scripts/context_audit.py --session-dir /tmp/test-session || true
+          python skills/context-engineering/scripts/context_audit.py --session-dir /tmp/test-session || true
