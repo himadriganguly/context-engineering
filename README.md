@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-compatible-blue)](https://agentskills.io)
 [![Version](https://img.shields.io/badge/version-1.0.0-green)](CHANGELOG.md)
-[![Validate skill](https://github.com/context-engineering-community/context-engineering-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/context-engineering-community/context-engineering-skill/actions/workflows/validate.yml)
+[![Validate skill](https://github.com/himadriganguly/context-engineering/actions/workflows/validate.yml/badge.svg)](https://github.com/himadriganguly/context-engineering/actions/workflows/validate.yml)
 
 **The missing meta-skill for AI agents.** Teaches any Agent
 Skills–compatible agent how to diagnose, optimize, and maintain its own
