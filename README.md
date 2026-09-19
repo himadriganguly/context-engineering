@@ -222,6 +222,46 @@ See [INSTALL.md](INSTALL.md) for runtime-specific notes.
 
 ---
 
+## Python Utilities Installation
+
+The core Python scripts require zero external dependencies and run on standard Python 3.9+.
+
+Standard Install (Heuristic Token Counting):
+
+```bash
+pip install .
+```
+
+Exact Token Math Install:
+
+To use exact token counting instead of the character-based heuristic, install the exact-tokens extra, which includes tiktoken:
+
+```bash
+pip install .[exact-token]
+```
+
+Development Install:
+
+To install testing dependencies (pytest, pyyaml) alongside exact token math:
+
+```bash
+pip install -e [.dev]
+```
+
+### Testing
+
+This project uses pytest to validate logic, file handling, metadata, and CLI integration. To run the test suite locally:
+
+1. Ensure you have installed the development dependencies (pip install -e .[dev]).
+
+2. Run pytest from the repository root:
+
+```bash
+pytest test/ -v
+```
+
+---
+
 ## Using the skill
 
 Ask the agent to use the skill when a context problem is suspected.

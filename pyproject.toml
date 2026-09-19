@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "context-engineering"
+version = "1.1.0"
+description = "Diagnose and improve context usage in AI agent sessions."
+authors = [
+    { name = "Himadri Ganguly", email = "himadri.tech@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.9"
+# Core scripts require zero external dependencies by default
+dependencies = []
+
+[project.optional-dependencies]
+# For users who want exact token math instead of the heuristic
+exact-tokens = [
+    "tiktoken>=0.7.0"
+]
+# For CI/CD and local development testing
+dev = [
+    "pytest>=7.0",
+    "pyyaml>=6.0",
+    "tiktoken>=0.7.0"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Automatically adds the scripts folder to the path for Pytest
+pythonpath = ["skills/context-engineering/scripts"]

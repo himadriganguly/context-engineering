@@ -1,35 +1,36 @@
-name: Validate skill
+name: Validate Context Audit
 
 on:
-  push:
-    branches: [main]
   pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
 
 jobs:
-  validate:
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Matches the compatibility documented in your SKILL.md
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Check SKILL.md has valid frontmatter
-        run: |
-          python - <<'PY'
-          import re, sys
-          text = open("skills/context-engineering/SKILL.md").read()
-          m = re.match(r"^---\n(.*?)\n---", text, re.S)
-          if not m:
-              print("SKILL.md missing YAML frontmatter"); sys.exit(1)
-          fm = m.group(1)
-          for field in ("name:", "description:", "license:"):
-              if field not in fm:
-                  print(f"Missing {field}"); sys.exit(1)
-          print("SKILL.md frontmatter OK")
-          PY
-      - name: Token estimator smoke test
-        run: python skills/context-engineering/scripts/token_estimator.py --text "hello world"
-      - name: Context audit smoke test
-        run: |
-          mkdir -p /tmp/test-session
-          python skills/context-engineering/scripts/context_audit.py --session-dir /tmp/test-session || true
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        # tiktoken is included to ensure the exact-token fallback is tested
+        pip install -e .[dev]
+
+    - name: Execute Test Suite
+      # Assumes you placed the Pytest file generated earlier into a 'tests/' directory
+      run: |
+        pytest tests/ -v
