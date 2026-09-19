@@ -245,7 +245,7 @@ Development Install:
 To install testing dependencies (pytest, pyyaml) alongside exact token math:
 
 ```bash
-pip install -e [.dev]
+pip install -e .[dev]
 ```
 
 ### Testing
