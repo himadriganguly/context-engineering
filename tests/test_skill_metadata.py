@@ -5,7 +5,7 @@ import pytest
 
 # Path to the SKILL.md file relative to this test file
 SKILL_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '../skills/context-engineering/SKILL.md')
+    os.path.join(os.path.dirname(__file__), '../skills/context_engineering/SKILL.md')
 )
 SKILL_DIR = os.path.dirname(SKILL_PATH)
 

@@ -4,7 +4,7 @@ import sys
 import pytest
 
 # Define the paths to the scripts relative to the tests directory
-SCRIPTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../skills/context-engineering/scripts'))
+SCRIPTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../skills/context_engineering/scripts'))
 AUDIT_SCRIPT = os.path.join(SCRIPTS_DIR, 'context_audit.py')
 ESTIMATOR_SCRIPT = os.path.join(SCRIPTS_DIR, 'token_estimator.py')
 

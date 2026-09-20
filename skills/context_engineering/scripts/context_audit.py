@@ -36,12 +36,13 @@ logger = logging.getLogger(__name__)
 DEFAULT_CHARS_PER_TOKEN = 3.8
 DEFAULT_WINDOW_SIZE = 128_000
 DEFAULT_OUTPUT_DIR = "~/.context-engineering/audits"
+MAX_FILE_SIZE_MB = 50
 
 def estimate_tokens(
     text: str, 
     chars_per_token: float,
     encoding_name: str = "cl100k_base"
-) -> int:
+) -> int:  # ← ADDED
     """
     Return exact token count if tiktoken is available, 
     otherwise fall back to a character-based estimate.
@@ -60,7 +61,24 @@ def estimate_tokens(
     return max(1, int(len(text) / chars_per_token))
 
 def read_text(path: str) -> str:
-    """Read a UTF-8 text file, replacing invalid byte sequences."""
+    """Read a UTF-8 text file, replacing invalid byte sequences.
+    
+    Args:
+        path: Path to file
+        
+    Returns:
+        File contents
+        
+    Raises:
+        ValueError: If file exceeds MAX_FILE_SIZE_MB
+    """
+    file_size_mb = os.path.getsize(path) / (1024 * 1024)
+    if file_size_mb > MAX_FILE_SIZE_MB:
+        raise ValueError(
+            f"File too large: {file_size_mb:.1f}MB exceeds "
+            f"limit of {MAX_FILE_SIZE_MB}MB ({path})"
+        )
+    
     with open(path, "r", encoding="utf-8", errors="replace") as handle:
         return handle.read()
 

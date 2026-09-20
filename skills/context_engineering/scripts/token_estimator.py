@@ -25,6 +25,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 DEFAULT_CHARS_PER_TOKEN = 3.8
+MAX_FILE_SIZE_MB = 50
 
 def estimate_tokens(
     text: str, 
@@ -52,7 +53,25 @@ def estimate_file(
     path: str,
     chars_per_token: float,
 ) -> int:
-    """Estimate tokens in a UTF-8 text file."""
+    """Estimate tokens in a UTF-8 text file.
+    
+    Args:
+        path: File path to analyze
+        chars_per_token: Character-to-token ratio
+        
+    Returns:
+        Estimated token count
+        
+    Raises:
+        ValueError: If file exceeds MAX_FILE_SIZE_MB
+    """
+    file_size_mb = os.path.getsize(path) / (1024 * 1024)
+    if file_size_mb > MAX_FILE_SIZE_MB:
+        raise ValueError(
+            f"File too large: {file_size_mb:.1f}MB exceeds "
+            f"limit of {MAX_FILE_SIZE_MB}MB ({path})"
+        )
+    
     with open(
         path,
         "r",

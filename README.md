@@ -71,13 +71,13 @@ problems.
 
 | Component | Purpose |
 |---|---|
-| `skills/context-engineering/SKILL.md` | Core five-step workflow |
-| `skills/context-engineering/scripts/context_audit.py` | Lightweight audit of supported session artifacts |
-| `skills/context-engineering/scripts/token_estimator.py` | Relative size/token estimate for text, files, and directories |
-| `skills/context-engineering/references/degradation-signals.md` | Context degradation taxonomy |
-| `skills/context-engineering/references/progressive-disclosure-patterns.md` | Context organization patterns |
-| `skills/context-engineering/references/token-budget-framework.md` | Budgeting guidance and example thresholds |
-| `skills/context-engineering/templates/context-profile.yaml` | Example project context profile |
+| `skills/context_engineering/SKILL.md` | Core five-step workflow |
+| `skills/context_engineering/scripts/context_audit.py` | Lightweight audit of supported session artifacts |
+| `skills/context_engineering/scripts/token_estimator.py` | Relative size/token estimate for text, files, and directories |
+| `skills/context_engineering/references/degradation-signals.md` | Context degradation taxonomy |
+| `skills/context_engineering/references/progressive-disclosure-patterns.md` | Context organization patterns |
+| `skills/context_engineering/references/token-budget-framework.md` | Budgeting guidance and example thresholds |
+| `skills/context_engineering/templates/context-profile.yaml` | Example project context profile |
 | `EXAMPLES.md` | Illustrative scenarios |
 | `INSTALL.md` | Installation and runtime compatibility notes |
 
@@ -94,7 +94,7 @@ The project does not require telemetry or a hosted service.
 The core skill follows the open Agent Skills format:
 
 ```
-skills/context-engineering/
+skills/context_engineering/
 ├── SKILL.md
 ├── references/
 ├── scripts/
@@ -161,7 +161,7 @@ Publish the skill with:
 
 ```bash
 hermes skills publish \
-  skills/context-engineering \
+  skills/context_engineering \
   --to github \
   --repo himadriganguly/context-engineering
 ```
@@ -193,13 +193,13 @@ contain `SKILL.md` at its top level:
 
 ```bash
 mkdir -p ~/.hermes/skills
-cp -r skills/context-engineering ~/.hermes/skills/
+cp -r skills/context_engineering ~/.hermes/skills/
 ```
 
 Verify:
 
 ```bash
-ls ~/.hermes/skills/context-engineering/SKILL.md
+ls ~/.hermes/skills/context_engineering/SKILL.md
 ```
 
 Hermes also supports GitHub skill taps and Hub installation. See
@@ -213,7 +213,7 @@ directory.
 Copy the skill directory:
 
 ```
-skills/context-engineering/
+skills/context_engineering/
 ```
 
 to the location documented by that runtime.
@@ -293,14 +293,14 @@ artifact layout.
 Basic usage:
 
 ```bash
-python3 skills/context-engineering/scripts/context_audit.py \
+python3 skills/context_engineering/scripts/context_audit.py \
   --session-dir PATH
 ```
 
 Specify a model/runtime context-window size:
 
 ```bash
-python3 skills/context-engineering/scripts/context_audit.py \
+python3 skills/context_engineering/scripts/context_audit.py \
   --session-dir PATH \
   --window-size 200000
 ```
@@ -308,7 +308,7 @@ python3 skills/context-engineering/scripts/context_audit.py \
 JSON output:
 
 ```bash
-python3 skills/context-engineering/scripts/context_audit.py \
+python3 skills/context_engineering/scripts/context_audit.py \
   --session-dir PATH \
   --json
 ```
@@ -316,7 +316,7 @@ python3 skills/context-engineering/scripts/context_audit.py \
 Compare the two latest reports:
 
 ```bash
-python3 skills/context-engineering/scripts/context_audit.py \
+python3 skills/context_engineering/scripts/context_audit.py \
   --session-dir PATH \
   --compare
 ```
@@ -324,7 +324,7 @@ python3 skills/context-engineering/scripts/context_audit.py \
 Specify where reports are written:
 
 ```bash
-python3 skills/context-engineering/scripts/context_audit.py \
+python3 skills/context_engineering/scripts/context_audit.py \
   --session-dir PATH \
   --output-dir ./audit-results
 ```
@@ -339,21 +339,21 @@ attention or determine causality.
 Estimate a string:
 
 ```bash
-python3 skills/context-engineering/scripts/token_estimator.py \
+python3 skills/context_engineering/scripts/token_estimator.py \
   --text "example text"
 ```
 
 Estimate a file:
 
 ```bash
-python3 skills/context-engineering/scripts/token_estimator.py \
+python3 skills/context_engineering/scripts/token_estimator.py \
   --file path/to/file
 ```
 
 Find large files:
 
 ```bash
-python3 skills/context-engineering/scripts/token_estimator.py \
+python3 skills/context_engineering/scripts/token_estimator.py \
   --dir . \
   --recursive \
   --top 20

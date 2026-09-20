@@ -18,7 +18,7 @@ optional Python utilities.
 The actual installable skill is:
 
 ```
-skills/context-engineering/
+skills/context_engineering/
 ├── SKILL.md
 ├── references/
 ├── scripts/
@@ -74,13 +74,13 @@ From this repository:
 
 ```bash
 mkdir -p ~/.hermes/skills
-cp -r skills/context-engineering ~/.hermes/skills/
+cp -r skills/context_engineering ~/.hermes/skills/
 ```
 
 Verify:
 
 ```bash
-ls ~/.hermes/skills/context-engineering/SKILL.md
+ls ~/.hermes/skills/context_engineering/SKILL.md
 ```
 
 Then restart or refresh the Hermes session if necessary.
@@ -117,7 +117,7 @@ The documented Hermes publishing command is:
 
 ```bash
 hermes skills publish \
-  skills/context-engineering \
+  skills/context_engineering \
   --to github \
   --repo himadriganguly/context-engineering
 ```
@@ -146,14 +146,14 @@ For example, if your Claude Code installation uses:
 copy:
 
 ```
-skills/context-engineering/
+skills/context_engineering/
 ```
 
 there:
 
 ```bash
 mkdir -p ~/.claude/skills
-cp -r skills/context-engineering ~/.claude/skills/
+cp -r skills/context_engineering ~/.claude/skills/
 ```
 
 Verify the skill using Claude Code's current skill-discovery mechanism.
@@ -183,7 +183,7 @@ install:
 
 ```bash
 mkdir -p ~/.cursor/skills
-cp -r skills/context-engineering ~/.cursor/skills/
+cp -r skills/context_engineering ~/.cursor/skills/
 ```
 
 Verify that Cursor can discover the skill using the current Cursor
@@ -212,7 +212,7 @@ install:
 
 ```bash
 mkdir -p ~/.codex/skills
-cp -r skills/context-engineering ~/.codex/skills/
+cp -r skills/context_engineering ~/.codex/skills/
 ```
 
 Verify using the current Codex skill-discovery interface.
@@ -240,7 +240,7 @@ install:
 
 ```bash
 mkdir -p ~/.gemini/skills
-cp -r skills/context-engineering ~/.gemini/skills/
+cp -r skills/context_engineering ~/.gemini/skills/
 ```
 
 Verify the skill using the current Gemini CLI skill interface.
@@ -286,7 +286,7 @@ For another runtime:
 3. Copy:
 
    ```
-   skills/context-engineering/
+   skills/context_engineering/
    ```
 
    into that directory.
@@ -319,7 +319,7 @@ session/
 Run:
 
 ```bash
-python3 skills/context-engineering/scripts/context_audit.py \
+python3 skills/context_engineering/scripts/context_audit.py \
   --session-dir PATH
 ```
 
@@ -339,7 +339,7 @@ but that is only a default.
 Use the actual model/runtime value where known:
 
 ```bash
-python3 skills/context-engineering/scripts/context_audit.py \
+python3 skills/context_engineering/scripts/context_audit.py \
   --session-dir PATH \
   --window-size 200000
 ```
@@ -347,7 +347,7 @@ python3 skills/context-engineering/scripts/context_audit.py \
 ### Choose the output directory
 
 ```bash
-python3 skills/context-engineering/scripts/context_audit.py \
+python3 skills/context_engineering/scripts/context_audit.py \
   --session-dir PATH \
   --output-dir ./audit-results
 ```
@@ -355,7 +355,7 @@ python3 skills/context-engineering/scripts/context_audit.py \
 ### JSON output
 
 ```bash
-python3 skills/context-engineering/scripts/context_audit.py \
+python3 skills/context_engineering/scripts/context_audit.py \
   --session-dir PATH \
   --json
 ```
@@ -363,7 +363,7 @@ python3 skills/context-engineering/scripts/context_audit.py \
 ### Compare reports
 
 ```bash
-python3 skills/context-engineering/scripts/context_audit.py \
+python3 skills/context_engineering/scripts/context_audit.py \
   --session-dir PATH \
   --compare
 ```
@@ -375,21 +375,21 @@ python3 skills/context-engineering/scripts/context_audit.py \
 ### Text
 
 ```bash
-python3 skills/context-engineering/scripts/token_estimator.py \
+python3 skills/context_engineering/scripts/token_estimator.py \
   --text "hello"
 ```
 
 ### File
 
 ```bash
-python3 skills/context-engineering/scripts/token_estimator.py \
+python3 skills/context_engineering/scripts/token_estimator.py \
   --file path/to/file
 ```
 
 ### Directory
 
 ```bash
-python3 skills/context-engineering/scripts/token_estimator.py \
+python3 skills/context_engineering/scripts/token_estimator.py \
   --dir . \
   --recursive \
   --top 20
@@ -407,21 +407,21 @@ At minimum:
 
 ```bash
 python3 -m py_compile \
-  skills/context-engineering/scripts/context_audit.py \
-  skills/context-engineering/scripts/token_estimator.py
+  skills/context_engineering/scripts/context_audit.py \
+  skills/context_engineering/scripts/token_estimator.py
 ```
 
 Then:
 
 ```bash
-python3 skills/context-engineering/scripts/token_estimator.py \
+python3 skills/context_engineering/scripts/token_estimator.py \
   --text "installation test"
 ```
 
 If you have a compatible session fixture:
 
 ```bash
-python3 skills/context-engineering/scripts/context_audit.py \
+python3 skills/context_engineering/scripts/context_audit.py \
   --session-dir PATH \
   --json
 ```
@@ -441,7 +441,7 @@ Remove the installed skill directory from the runtime's skill location.
 For Hermes:
 
 ```bash
-rm -rf ~/.hermes/skills/context-engineering
+rm -rf ~/.hermes/skills/context_engineering
 ```
 
 If you created audit reports using the default location:

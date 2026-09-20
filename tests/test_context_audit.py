@@ -4,7 +4,7 @@ import sys
 import pytest
 
 # Add the scripts directory to the Python path for testing
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../skills/context-engineering/scripts')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../skills/context_engineering/scripts')))
 
 from context_audit import load_session, audit
 

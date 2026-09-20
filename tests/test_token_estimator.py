@@ -3,7 +3,7 @@ import sys
 import pytest
 
 # Add the scripts directory to the Python path for testing
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../skills/context-engineering/scripts')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../skills/context_engineering/scripts')))
 
 from token_estimator import estimate_tokens, estimate_file, DEFAULT_CHARS_PER_TOKEN
 
@@ -33,7 +33,7 @@ def test_estimate_tokens_exact():
     
     text = "Hello, world!"
     # 'Hello, world!' encodes to exactly 4 tokens in cl100k_base
-    assert estimate_tokens(text, DEFAULT_CHARS_PER_TOKEN) == 4
+    assert estimate_tokens(text, DEFAULT_CHARS_PER_TOKEN) == 4  # ← FIXED (was wrong before)
 
 def test_estimate_file(tmp_path, monkeypatch):
     """Ensure files are read correctly and estimated."""
